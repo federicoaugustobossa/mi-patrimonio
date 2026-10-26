@@ -1,0 +1,8 @@
+{
+  "name": "mi-patrimonio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "App personal de finanzas: cuentas, gastos, presupuestos y patrimonio.",
+  "engines": { "node": ">=18" }
+}
