@@ -1,7 +1,7 @@
 // Devuelve la configuración pública de Supabase (la clave anon es pública por diseño;
 // la seguridad la dan las políticas RLS de la base).
 export default function handler(req, res) {
-  const url = process.env.SUPABASE_URL;
+  const url = (process.env.SUPABASE_URL || '').trim().replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
   const anonKey = process.env.SUPABASE_ANON_KEY;
   if (!url || !anonKey) {
     res.status(500).json({ error: 'Faltan SUPABASE_URL o SUPABASE_ANON_KEY en las variables de entorno de Vercel.' });

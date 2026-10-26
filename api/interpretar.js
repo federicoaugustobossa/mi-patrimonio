@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   if (!apiKey) { res.status(501).json({ error: 'Interpretación con IA no configurada' }); return; }
 
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
-  const sUrl = process.env.SUPABASE_URL, anon = process.env.SUPABASE_ANON_KEY;
+  const sUrl = (process.env.SUPABASE_URL || '').trim().replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, ''), anon = process.env.SUPABASE_ANON_KEY;
   if (!token || !sUrl || !anon) { res.status(401).json({ error: 'Sin sesión' }); return; }
   const u = await fetch(`${sUrl}/auth/v1/user`, { headers: { apikey: anon, Authorization: `Bearer ${token}` } });
   if (!u.ok) { res.status(401).json({ error: 'Sesión inválida' }); return; }
