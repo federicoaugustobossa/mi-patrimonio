@@ -10,10 +10,11 @@ Se instala desde Safari como una app (ícono propio, pantalla completa) y funcio
 1. En supabase.com, abrí tu proyecto `mi-patrimonio`.
 2. Andá a **SQL Editor → New query**, pegá todo el contenido de `supabase/schema.sql` y tocá **Run**. Tiene que decir *Success*.
 3. Andá a **Authentication → URL Configuration** y en **Site URL** poné la dirección que te dé Vercel en el paso 2 (por ejemplo `https://mi-patrimonio.vercel.app`).
-4. Andá a **Project Settings → API Keys** (o **API**) y dejá a mano:
-   - la **URL del proyecto** (`https://xxxx.supabase.co`)
-   - la clave **anon / publishable** (es pública)
-   - la clave **service_role / secret** (es secreta: solo va en Vercel, no la compartas con nadie)
+4. Juntá tres datos:
+   - **URL del proyecto** (`https://xxxx.supabase.co`): botón **Connect** arriba en la pantalla del proyecto.
+   - **Clave publishable** (`sb_publishable_…`, es pública): **Settings → API Keys**.
+   - **Clave secret** (`sb_secret_…`, es secreta: solo va en Vercel): **Settings → API Keys**, tocá el ojo para verla.
+   También sirven las claves viejas `anon` y `service_role` si tu proyecto las muestra.
 
 ### 2. Publicar en Vercel
 1. En vercel.com: **Add New → Project**, elegí el repositorio `mi-patrimonio` y tocá **Import**.

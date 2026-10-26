@@ -53,7 +53,10 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en Vercel.' });
     return;
   }
-  const H = { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
+  // Claves nuevas (sb_secret_…) van solo en el encabezado apikey; las viejas (JWT) también en Authorization.
+  const H = key.startsWith('sb_')
+    ? { apikey: key, 'Content-Type': 'application/json' }
+    : { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
   res.setHeader('Cache-Control', 'no-store');
 
   // Si ya se consultó hace menos de 30 minutos, no vuelve a pedirla.
