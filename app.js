@@ -851,7 +851,7 @@ function traducir(m=''){
   if(/already registered|already exists/i.test(m))return'Ese email ya tiene una cuenta. Tocá “Ingresar”.';
   if(/Signups not allowed|signup.*disabled/i.test(m))return'La creación de cuentas está desactivada.';
   if(/Email not confirmed/i.test(m))return'Todavía no confirmaste el email. Revisá tu correo.';
-  if(/fetch|network/i.test(m))return'No hay conexión con el servidor. Si tu internet anda bien, puede que el proyecto de Supabase esté pausado.';
+  if(/fetch|network|load failed/i.test(m))return'No hay conexión con el servidor. Si tu internet anda bien, puede que el proyecto de Supabase esté pausado.';
   if(/same.*password|different from the old/i.test(m))return'La contraseña nueva tiene que ser distinta de la anterior.';
   if(/rate limit|security purposes/i.test(m))return'Hiciste muchos intentos seguidos. Esperá un minuto y probá de nuevo.';
   if(/expired|invalid.*(link|token)|otp/i.test(m))return'El link venció o ya se usó. Pedí uno nuevo con “Olvidé mi contraseña”.';
