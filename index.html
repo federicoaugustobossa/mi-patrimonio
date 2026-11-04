@@ -34,10 +34,10 @@
 <script>
   // Arranca la app cuando la librería de Supabase está lista (CDN principal o alternativo)
   (function boot(){
-    function go(){var t=document.createElement('script');t.src='/app.js?v=1';document.body.appendChild(t);}
+    function go(){var t=document.createElement('script');t.src='/app.js?v=2';document.body.appendChild(t);}
     if(window.supabase){go();return;}
     window.__sbReady=go;
-    setTimeout(function(){if(!window.supabase&&!document.querySelector('script[src="/app.js?v=1"]')){
+    setTimeout(function(){if(!window.supabase&&!document.querySelector('script[src="/app.js?v=2"]')){
       document.getElementById('view').innerHTML='<div class="card empty"><h3>No se pudo cargar la app</h3><p>Revisá tu conexión a internet y volvé a abrirla.</p></div>';}},12000);
   })();
 </script>

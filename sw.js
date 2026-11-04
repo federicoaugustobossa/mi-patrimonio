@@ -1,8 +1,8 @@
 // Service worker: permite abrir la app sin conexión.
 // Estrategia: primero la red (siempre la versión más nueva), y si no hay señal, la copia guardada.
 // Las llamadas a /api y a Supabase nunca se guardan en caché.
-const CACHE = 'mi-patrimonio-v1';
-const SHELL = ['/', '/index.html', '/styles.css', '/app.js?v=1', '/manifest.webmanifest',
+const CACHE = 'mi-patrimonio-v2';
+const SHELL = ['/', '/index.html', '/styles.css', '/app.js?v=2', '/manifest.webmanifest',
   '/icons/apple-touch-icon.png', '/icons/icon-192.png', '/icons/icon-512.png'];
 const CDN = ['cdn.jsdelivr.net', 'unpkg.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 

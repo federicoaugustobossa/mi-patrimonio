@@ -177,6 +177,7 @@ function render(){
   const v=document.getElementById('view');
   if(S.status==='loading'){v.innerHTML=`<div class="empty"><h3>Abriendo tus datos…</h3></div>`;return;}
   if(S.status==='login'){v.innerHTML=vLogin();return;}
+  if(S.status==='nuevaPass'){v.innerHTML=vNuevaPass();return;}
   if(S.status==='error'){v.innerHTML=`<div class="card empty"><h3>No se pudo conectar con el servidor</h3><p>${esc(S.errMsg||'Revisá tu conexión.')}</p><button class="btn pri" data-act="reintentar">Reintentar</button></div>`;return;}
   v.innerHTML=({inicio:vInicio,movs:vMovs,presu:vPresu,cuentas:vCuentas,ajustes:vAjustes}[S.view]||vInicio)();
 }
@@ -346,7 +347,7 @@ function vAjustes(){
   const cs=[...S.cotiz].sort((a,b)=>b.fecha.localeCompare(a.fecha));
   const pend=OUT.length;
   return `<div class="head"><h1>Ajustes</h1></div>
-  <div class="card"><div class="card-h"><h2>Tu cuenta</h2><button class="btn sm" data-act="salir">Cerrar sesión</button></div>
+  <div class="card"><div class="card-h"><h2>Tu cuenta</h2><span class="filters" style="flex:none"><button class="btn sm" data-act="cambiarPass">Cambiar contraseña</button><button class="btn sm" data-act="salir">Cerrar sesión</button></span></div>
    <div class="small">${esc(USER?.email||'')}</div>
    <div class="small muted" style="margin-top:4px">${pend?`<span class="chip warn">${pend} cambios sin subir</span> Se suben solos cuando haya conexión.${S.syncErr?' Último error: '+esc(S.syncErr):''} <button class="btn sm" data-act="syncAhora">Reintentar</button>`:`<span class="chip good">Todo sincronizado</span>${S.lastSync?' · '+new Date(S.lastSync).toLocaleString('es-AR',{timeZone:TZ}):''}`}</div></div>
   <div class="card" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn" data-go="presu">${svgI('presu').replace('<svg','<svg width="18" height="18"')}Presupuestos</button><button class="btn" data-go="cuentas">Cuentas</button></div>
@@ -642,6 +643,10 @@ document.addEventListener('click',async e=>{
    case'reintentar':start();break;
    case'syncAhora':flush().then(pull).then(()=>{toast('Sincronizado');render()}).catch(()=>{});break;
    case'login':case'signup':login(a==='signup');break;
+   case'olvide':olvide();break;
+   case'guardarPass':guardarPass();break;
+   case'cambiarPass':S.status='nuevaPass';S.passCambio=true;S.loginErr='';S.loginInfo='';render();break;
+   case'cancelarPass':S.status='ok';S.passCambio=false;render();break;
    case'verPass':{const i=document.getElementById('lpass');i.type=i.type==='password'?'text':'password';break;}
    case'delCotiz':{const f=b.dataset.id;S.cotizMan=S.cotizMan.filter(x=>x.fecha!==f);mergeCotiz();persist('cotizaciones',{fecha:f},'delete');toast('Cotización manual borrada');render();break;}
    case'saveNombre':{const n=document.getElementById('nombre').value.trim()||'Mi Patrimonio';saveCfg({nombre:n});toast('Nombre guardado');render();break;}
@@ -810,14 +815,46 @@ function vLogin(){
    ${S.loginErr?`<div class="note" role="alert">${esc(S.loginErr)}</div>`:''}
    ${S.loginInfo?`<div class="note info">${esc(S.loginInfo)}</div>`:''}
    <div class="actions"><button class="btn" data-act="signup">Crear cuenta</button><button class="btn pri" data-act="login">Ingresar</button></div>
+   <button class="btn ghost sm" style="align-self:center" data-act="olvide">Olvidé mi contraseña</button>
   </div>`;
+}
+function vNuevaPass(){
+  return `<div class="login">
+   <div class="brand"><i>$</i>${esc(cfg().nombre||'Mi Patrimonio')}</div>
+   <h2>${S.passCambio?'Cambiar contraseña':'Elegí una contraseña nueva'}</h2>
+   <label class="f"><span>Contraseña nueva</span><input id="npass" type="password" autocomplete="new-password" placeholder="Mínimo 8 caracteres"></label>
+   <label class="f"><span>Repetila</span><input id="npass2" type="password" autocomplete="new-password"></label>
+   ${S.loginErr?`<div class="note" role="alert">${esc(S.loginErr)}</div>`:''}
+   <div class="actions">${S.passCambio?'<button class="btn" data-act="cancelarPass">Cancelar</button>':''}<button class="btn pri" data-act="guardarPass">Guardar contraseña</button></div>
+  </div>`;
+}
+async function olvide(){
+  const email=(document.getElementById('lemail')?.value||'').trim();S.loginEmail=email;S.loginErr='';S.loginInfo='';
+  if(!email){S.loginErr='Escribí tu email arriba y volvé a tocar “Olvidé mi contraseña”.';return render();}
+  const {error}=await SB.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/'});
+  if(error){S.loginErr=traducir(error.message);return render();}
+  S.loginInfo='Si ese email tiene una cuenta, te llegó un correo para elegir una contraseña nueva. Abrí el link desde este mismo iPhone.';render();
+}
+async function guardarPass(){
+  const a=document.getElementById('npass').value,b=document.getElementById('npass2').value;S.loginErr='';
+  if(a.length<8){S.loginErr='La contraseña tiene que tener al menos 8 caracteres.';return render();}
+  if(a!==b){S.loginErr='Las dos contraseñas no coinciden.';return render();}
+  const {data,error}=await SB.auth.updateUser({password:a});
+  if(error){S.loginErr=traducir(error.message);return render();}
+  const cambio=S.passCambio;S.passCambio=false;S.recovery=false;
+  try{history.replaceState(null,'',location.pathname)}catch(_){}
+  toast('Contraseña guardada');
+  if(cambio){S.status='ok';render();}else await entrar(data.user);
 }
 function traducir(m=''){
   if(/Invalid login/i.test(m))return'Email o contraseña incorrectos.';
   if(/already registered|already exists/i.test(m))return'Ese email ya tiene una cuenta. Tocá “Ingresar”.';
   if(/Signups not allowed|signup.*disabled/i.test(m))return'La creación de cuentas está desactivada.';
   if(/Email not confirmed/i.test(m))return'Todavía no confirmaste el email. Revisá tu correo.';
-  if(/fetch|network/i.test(m))return'No hay conexión con el servidor. Revisá tu internet.';
+  if(/fetch|network/i.test(m))return'No hay conexión con el servidor. Si tu internet anda bien, puede que el proyecto de Supabase esté pausado.';
+  if(/same.*password|different from the old/i.test(m))return'La contraseña nueva tiene que ser distinta de la anterior.';
+  if(/rate limit|security purposes/i.test(m))return'Hiciste muchos intentos seguidos. Esperá un minuto y probá de nuevo.';
+  if(/expired|invalid.*(link|token)|otp/i.test(m))return'El link venció o ya se usó. Pedí uno nuevo con “Olvidé mi contraseña”.';
   return m;
 }
 async function login(nueva){
@@ -885,13 +922,19 @@ async function cargarConfig(){
 }
 let authSub=false;
 async function start(){
+  if(/type=recovery/.test(location.hash))S.recovery=true;
+  const errHash=new URLSearchParams(location.hash.slice(1)).get('error_description');
   S.status='loading';render();
   try{
     if(!SB){CONF=await cargarConfig();
       SB=window.supabase.createClient(CONF.url,CONF.anonKey,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'mp-auth'}});}
   }catch(e){S.status='error';S.errMsg='No se encontró la configuración del servidor. '+(e.message||'');render();return;}
-  if(!authSub){authSub=true;SB.auth.onAuthStateChange((ev)=>{if(ev==='SIGNED_OUT'&&USER){USER=null;S.status='login';render();}});}
+  if(!authSub){authSub=true;SB.auth.onAuthStateChange((ev)=>{
+    if(ev==='PASSWORD_RECOVERY'){S.recovery=true;S.status='nuevaPass';render();}
+    if(ev==='SIGNED_OUT'&&USER){USER=null;S.status='login';render();}});}
   let session=null;try{({data:{session}}=await SB.auth.getSession());}catch(e){}
+  if(S.recovery&&session?.user){S.status='nuevaPass';S.loginErr='';render();return;}
+  if(errHash){S.loginErr=traducir(errHash);try{history.replaceState(null,'',location.pathname)}catch(_){}}
   if(session?.user){await entrar(session.user);return;}
   // sin señal y con la sesión vencida: abrir igual con los datos del teléfono
   let lastU=null;try{lastU=JSON.parse(localStorage.getItem('mp_user'))}catch(_){}
